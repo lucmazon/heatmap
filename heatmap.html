@@ -27,22 +27,54 @@
 </script>
 
 <script type="text/javascript">
-    var data = [4, 8, 15, 16, 23, 42];
+    var colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"];
 
-    var x = d3.scale.linear()
-            .domain([0, d3.max(data)])
-            .range([0, 420]);
+    d3.tsv("data.tsv",
+            function (d) {
+                return {
+                    id: +d.id,
+                    value: +d.value
+                };
+            }, function (error, data) {
+                var buckets = 9;
+                var colorScale = d3.scale.quantile()
+                        .domain([0, buckets - 1, d3.max(data, function (d) {
+                            return d.value;
+                        })])
+                        .range(colors);
 
-    d3.select(".chart")
-            .selectAll("div")
-            .data(data)
-            .enter().append("div")
-            .style("width", function (d) {
-                return x(d) + "px";
-            })
-            .text(function (d) {
-                return d;
+                var svg = d3.select("svg");
+
+                var paths = svg.selectAll('#layer1 path')
+                                .data(data)
+                                .style("fill", function (d) {
+                                    console.log(d);
+                                })
+                        ;
+//                     .data(data)
+//                     .enter()
+//                     .select(function(d) {
+//                         console.log(d);
+//                         return "#" + d.id})
+//                     .style("fill", colors[0])
             });
+
+    //    var data = [4, 8, 15, 16, 23, 42];
+    //
+    //    var x = d3.scale.linear()
+    //            .domain([0, d3.max(data)])
+    //            .range([0, 420]);
+    //
+    //    d3.select(".chart")
+    //            .selectAll("div")
+    //            .data(data)
+    //            .enter().append("div")
+    //            .style("width", function (d) {
+    //                return x(d) + "px";
+    //            })
+    //            .text(function (d) {
+    //                return d;
+    //            });
 </script>
 </body>
 </html>
