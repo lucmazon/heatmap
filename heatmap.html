@@ -27,12 +27,11 @@
 </script>
 
 <script type="text/javascript">
-    var colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"];
+    var colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58", "#020b27"];
 
     d3.tsv("data.tsv",
             function (d) {
                 return {
-                    id: +d.id,
                     value: +d.value
                 };
             }, function (error, data) {
@@ -47,8 +46,9 @@
 
                 var paths = svg.selectAll('#layer1 path')
                                 .data(data)
-                                .style("fill", function (d) {
-                                    console.log(d);
+                                .attr("fill", function (d) {
+                                    console.log(colorScale(d.value));
+                                    colorScale(d.value);
                                 })
                         ;
 //                     .data(data)
