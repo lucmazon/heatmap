@@ -34,13 +34,33 @@
 
 <script type="text/javascript">
     var colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58", "#020b27"];
+    var bepoLayout = [
+        // left hand
+        '<esc>', '"', '«', '»', '(', ')', '$', 'w', 'b', 'é', 'p', 'o', 'è', '<tab>',
+        'ç', 'a', 'u', 'i', 'e', ',', 'left super', 'à', 'y', 'x', '.', 'k', '<enter>',
+        '<pgup>', '<pgdown>', '<del>', '<backspace>', 'left ctrl',
+
+        // left thumb block
+        'del', '<fn3>', '<space>', 'left shift', '<fn1>', 'left alt',
+
+        // right hand
+        '%',  '@', '+', '-', '/', '*', '=',
+        ' ', '^', 'v', 'd', 'l', 'j', 'z',
+        'c', 't', 's', 'r', 'n', 'm',
+        ' ', '\'', 'q', 'g', 'h', 'f', '<capslock>',
+        'right ctrl', '<left>', '<up>', '<down>', '<right>',
+
+            //right thumb block
+        ' ', ' ', ' ', 'right shift', '<backspace>', 'right alt',
+
+    ];
 
     //UI configuration
-    var itemSize = 40,
-            width = 800,
-            height = 800,
-            gap = 4,
+    var itemSize = 50,
             margin = {top: 20, right: 20, bottom: 20, left: 20},
+            width = itemSize * 20.5 + margin.left + margin.right,
+            height = itemSize * 7.5 + margin.top + margin.bottom,
+            gap = 4,
             square = {width: itemSize - gap, height: itemSize - gap},
             oneAndHalfHorizontalRectangle = {width: itemSize * 1.5 - gap, height: itemSize - gap},
             twiceHorizontalRectangle = {width: itemSize * 2 - gap, height: itemSize - gap},
@@ -72,20 +92,16 @@
     d3.tsv("ergodox.tsv",
             function (d) {
                 return {
-                    id: +d.id,
+//                    id: +d.id,
                     x: +d.x,
                     y: +d.y,
                     kind: +d.kind,
-                    rotate: 0,
+                    rx: +d.rx,
+                    ry: +d.ry,
+                    rotate: +d.rotate,
                     value: 0
                 };
             }, function (error, data) {
-//                var colorScale = d3.scale.quantile()
-//                        .domain([0, buckets - 1, d3.max(data, function (d) {
-//                            return d.value;
-//                        })])
-//                        .range(colors);
-
                 var svg = d3.select("[role='heatmap']");
                 var heatmap = svg
                         .attr('width', width)
@@ -95,78 +111,58 @@
                         .attr('height', height - margin.top - margin.bottom)
                         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-                var rect = heatmap.selectAll('rect')
-                                .data(data)
-                                .enter().append('rect')
-                                .attr('width', function (d) {
-                                    return getKind(d.kind).width;
-                                })
-                                .attr('height', function (d) {
-                                    return getKind(d.kind).height;
-                                })
-                                .attr('x', function (d) {
-                                    return d.x * itemSize;
-                                })
-                                .attr('y', function (d) {
-                                    return d.y * itemSize;
-                                })
-                                .attr('class', 'bordered')
-                                .attr('fill', "#FFFFFF")
-                                .attr('transform', function (d) {
-                                    center_x = d.x * itemSize + getKind(d.kind).width / 2;
-                                    center_y = d.y * itemSize + getKind(d.kind).height / 2;
-                                    return d.rotate != "0" ? "rotate(" + d.rotate + "," + center_x + ", " + center_y + ")" : null;
-                                })
-                        ;
+                var container = heatmap.selectAll('g')
+                        .data(data)
+                        .enter().append('g');
+
+                container.append('rect')
+                        .attr('width', function (d) {
+                            return getKind(d.kind).width;
+                        })
+                        .attr('height', function (d) {
+                            return getKind(d.kind).height;
+                        })
+                        .attr('x', function (d) {
+                            return d.x * itemSize;
+                        })
+                        .attr('y', function (d) {
+                            return d.y * itemSize;
+                        })
+                        .attr('class', 'bordered')
+                        .attr('fill', "#FFFFFF")
+                        .attr('transform', function (d) {
+                            if (d.rotate != "0")
+                                return "rotate(" + d.rotate + ", " + d.rx * itemSize + ", " + d.ry * itemSize + ")";
+                            else
+                                return null;
+                        });
+
+                container.append('text')
+                        .attr('x', function (d) {
+                            width = getKind(d.kind).width;
+                            return d.x * itemSize + width / 2;
+                        })
+                        .attr('y', function (d) {
+                            height = getKind(d.kind).height;
+                            return d.y * itemSize + height / 2;
+                        })
+                        .attr('dominant-baseline', 'middle')
+                        .attr('text-anchor', 'middle')
+                        .text(function (d, i) {
+                            if (bepoLayout.length > i)
+                                return bepoLayout[i];
+                            else
+                                return i;
+
+                        })
+                        .attr('transform', function (d) {
+                            if (d.rotate != "0")
+                                return "rotate(" + d.rotate + ", " + d.rx * itemSize + ", " + d.ry * itemSize + ")";
+                            else
+                                return null;
+                        });
             }
     );
-
-    d3.tsv("data.tsv",
-            function (d) {
-                return {
-                    value: +d.value
-                };
-            }, function (error, data) {
-                var buckets = 9;
-                var colorScale = d3.scale.quantile()
-                        .domain([0, buckets - 1, d3.max(data, function (d) {
-                            return d.value;
-                        })])
-                        .range(colors);
-
-                var svg = d3.select("svg");
-
-                var paths = svg.selectAll('#layer1 path')
-                                .data(data)
-                                .attr("fill", function (d) {
-                                    console.log(colorScale(d.value));
-                                    colorScale(d.value);
-                                })
-                        ;
-//                     .data(data)
-//                     .enter()
-//                     .select(function(d) {
-//                         console.log(d);
-//                         return "#" + d.id})
-//                     .style("fill", colors[0])
-            });
-
-    //    var data = [4, 8, 15, 16, 23, 42];
-    //
-    //    var x = d3.scale.linear()
-    //            .domain([0, d3.max(data)])
-    //            .range([0, 420]);
-    //
-    //    d3.select(".chart")
-    //            .selectAll("div")
-    //            .data(data)
-    //            .enter().append("div")
-    //            .style("width", function (d) {
-    //                return x(d) + "px";
-    //            })
-    //            .text(function (d) {
-    //                return d;
-    //            });
 </script>
 </body>
 </html>
