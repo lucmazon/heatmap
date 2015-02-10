@@ -15,9 +15,15 @@
             color: white;
         }
     </style>
+    <style>
+        rect.bordered {
+            stroke: #000000;
+            stroke-width: 2px;
+        }
+    </style>
 </head>
 <body>
-<div class="chart"></div>
+<svg role="heatmap"></svg>
 
 <script type="text/javascript">
 
@@ -28,6 +34,92 @@
 
 <script type="text/javascript">
     var colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58", "#020b27"];
+
+    //UI configuration
+    var itemSize = 40,
+            width = 800,
+            height = 800,
+            gap = 4,
+            margin = {top: 20, right: 20, bottom: 20, left: 20},
+            square = {width: itemSize - gap, height: itemSize - gap},
+            oneAndHalfHorizontalRectangle = {width: itemSize * 1.5 - gap, height: itemSize - gap},
+            twiceHorizontalRectangle = {width: itemSize * 2 - gap, height: itemSize - gap},
+            oneAndHalfVerticalRectangle = {width: itemSize - gap, height: itemSize * 1.5 - gap},
+            twiceVerticalRectangle = {width: itemSize - gap, height: itemSize * 2 - gap};
+
+    function getKind(i) {
+        var result;
+        switch (i) {
+            case 1:
+                result = square;
+                break;
+            case 2:
+                result = oneAndHalfHorizontalRectangle;
+                break;
+            case 3:
+                result = twiceHorizontalRectangle;
+                break;
+            case 4:
+                result = oneAndHalfVerticalRectangle;
+                break;
+            case 5:
+                result = twiceVerticalRectangle;
+                break;
+        }
+        return result;
+    }
+
+    d3.tsv("ergodox.tsv",
+            function (d) {
+                return {
+                    id: +d.id,
+                    x: +d.x,
+                    y: +d.y,
+                    kind: +d.kind,
+                    rotate: 0,
+                    value: 0
+                };
+            }, function (error, data) {
+//                var colorScale = d3.scale.quantile()
+//                        .domain([0, buckets - 1, d3.max(data, function (d) {
+//                            return d.value;
+//                        })])
+//                        .range(colors);
+
+                var svg = d3.select("[role='heatmap']");
+                var heatmap = svg
+                        .attr('width', width)
+                        .attr('height', height)
+                        .append('g')
+                        .attr('width', width - margin.left - margin.right)
+                        .attr('height', height - margin.top - margin.bottom)
+                        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+                var rect = heatmap.selectAll('rect')
+                                .data(data)
+                                .enter().append('rect')
+                                .attr('width', function (d) {
+                                    return getKind(d.kind).width;
+                                })
+                                .attr('height', function (d) {
+                                    return getKind(d.kind).height;
+                                })
+                                .attr('x', function (d) {
+                                    return d.x * itemSize;
+                                })
+                                .attr('y', function (d) {
+                                    return d.y * itemSize;
+                                })
+                                .attr('class', 'bordered')
+                                .attr('fill', "#FFFFFF")
+                                .attr('transform', function (d) {
+                                    center_x = d.x * itemSize + getKind(d.kind).width / 2;
+                                    center_y = d.y * itemSize + getKind(d.kind).height / 2;
+                                    return d.rotate != "0" ? "rotate(" + d.rotate + "," + center_x + ", " + center_y + ")" : null;
+                                })
+                        ;
+            }
+    );
 
     d3.tsv("data.tsv",
             function (d) {
