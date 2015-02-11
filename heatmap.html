@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Heatmap</title>
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
     <script type="text/javascript" src="js/d3.v3.js"></script>
 
     <style>
@@ -26,143 +28,180 @@
 <svg role="heatmap"></svg>
 
 <script type="text/javascript">
+    $(function () {
+        $.getJSON('heatmap.json', function (data) {
+            fillHeatmap(data);
+        });
 
-    d3.xml("ergodox_bepo.svg", "image/svg+xml", function (xml) {
-        document.body.appendChild(xml.documentElement);
-    });
-</script>
+        function fillHeatmap(heatmapValues) {
+            var colors = ["#ffffff", "#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58", "#020b27"];
+            var bepoLayout = [
+                // left hand
+                '<esc>', '"', '«', '»', '(', ')', '$', 'w', 'b', 'é', 'p', 'o', 'è', '<tab>',
+                'ç', 'a', 'u', 'i', 'e', ',', 'left super', 'à', 'y', 'x', '.', 'k', '<enter>',
+                '<pgup>', '<pgdown>', '<del>', '<backspace>', 'left ctrl',
 
-<script type="text/javascript">
-    var colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58", "#020b27"];
-    var bepoLayout = [
-        // left hand
-        '<esc>', '"', '«', '»', '(', ')', '$', 'w', 'b', 'é', 'p', 'o', 'è', '<tab>',
-        'ç', 'a', 'u', 'i', 'e', ',', 'left super', 'à', 'y', 'x', '.', 'k', '<enter>',
-        '<pgup>', '<pgdown>', '<del>', '<backspace>', 'left ctrl',
+                // left thumb block
+                'del', '<fn3>', '<space>', 'left shift', '<fn1>', 'left alt',
 
-        // left thumb block
-        'del', '<fn3>', '<space>', 'left shift', '<fn1>', 'left alt',
+                // right hand
+                '%', '@', '+', '-', '/', '*', '=',
+                ' ', '^', 'v', 'd', 'l', 'j', 'z',
+                'c', 't', 's', 'r', 'n', 'm',
+                ' ', '\'', 'q', 'g', 'h', 'f', '<capslock>',
+                'right ctrl', '<left>', '<up>', '<down>', '<right>',
 
-        // right hand
-        '%',  '@', '+', '-', '/', '*', '=',
-        ' ', '^', 'v', 'd', 'l', 'j', 'z',
-        'c', 't', 's', 'r', 'n', 'm',
-        ' ', '\'', 'q', 'g', 'h', 'f', '<capslock>',
-        'right ctrl', '<left>', '<up>', '<down>', '<right>',
+                //right thumb block
+                ' ', ' ', ' ', 'right shift', '<backspace>', 'right alt'
 
-            //right thumb block
-        ' ', ' ', ' ', 'right shift', '<backspace>', 'right alt',
+            ];
 
-    ];
-
-    //UI configuration
-    var itemSize = 50,
-            margin = {top: 20, right: 20, bottom: 20, left: 20},
-            width = itemSize * 20.5 + margin.left + margin.right,
-            height = itemSize * 7.5 + margin.top + margin.bottom,
-            gap = 4,
-            square = {width: itemSize - gap, height: itemSize - gap},
-            oneAndHalfHorizontalRectangle = {width: itemSize * 1.5 - gap, height: itemSize - gap},
-            twiceHorizontalRectangle = {width: itemSize * 2 - gap, height: itemSize - gap},
-            oneAndHalfVerticalRectangle = {width: itemSize - gap, height: itemSize * 1.5 - gap},
-            twiceVerticalRectangle = {width: itemSize - gap, height: itemSize * 2 - gap};
-
-    function getKind(i) {
-        var result;
-        switch (i) {
-            case 1:
-                result = square;
-                break;
-            case 2:
-                result = oneAndHalfHorizontalRectangle;
-                break;
-            case 3:
-                result = twiceHorizontalRectangle;
-                break;
-            case 4:
-                result = oneAndHalfVerticalRectangle;
-                break;
-            case 5:
-                result = twiceVerticalRectangle;
-                break;
-        }
-        return result;
-    }
-
-    d3.tsv("ergodox.tsv",
-            function (d) {
-                return {
-//                    id: +d.id,
-                    x: +d.x,
-                    y: +d.y,
-                    kind: +d.kind,
-                    rx: +d.rx,
-                    ry: +d.ry,
-                    rotate: +d.rotate,
-                    value: 0
-                };
-            }, function (error, data) {
-                var svg = d3.select("[role='heatmap']");
-                var heatmap = svg
-                        .attr('width', width)
-                        .attr('height', height)
-                        .append('g')
-                        .attr('width', width - margin.left - margin.right)
-                        .attr('height', height - margin.top - margin.bottom)
-                        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-                var container = heatmap.selectAll('g')
-                        .data(data)
-                        .enter().append('g');
-
-                container.append('rect')
-                        .attr('width', function (d) {
-                            return getKind(d.kind).width;
-                        })
-                        .attr('height', function (d) {
-                            return getKind(d.kind).height;
-                        })
-                        .attr('x', function (d) {
-                            return d.x * itemSize;
-                        })
-                        .attr('y', function (d) {
-                            return d.y * itemSize;
-                        })
-                        .attr('class', 'bordered')
-                        .attr('fill', "#FFFFFF")
-                        .attr('transform', function (d) {
-                            if (d.rotate != "0")
-                                return "rotate(" + d.rotate + ", " + d.rx * itemSize + ", " + d.ry * itemSize + ")";
-                            else
-                                return null;
-                        });
-
-                container.append('text')
-                        .attr('x', function (d) {
-                            width = getKind(d.kind).width;
-                            return d.x * itemSize + width / 2;
-                        })
-                        .attr('y', function (d) {
-                            height = getKind(d.kind).height;
-                            return d.y * itemSize + height / 2;
-                        })
-                        .attr('dominant-baseline', 'middle')
-                        .attr('text-anchor', 'middle')
-                        .text(function (d, i) {
-                            if (bepoLayout.length > i)
-                                return bepoLayout[i];
-                            else
-                                return i;
-
-                        })
-                        .attr('transform', function (d) {
-                            if (d.rotate != "0")
-                                return "rotate(" + d.rotate + ", " + d.rx * itemSize + ", " + d.ry * itemSize + ")";
-                            else
-                                return null;
-                        });
+            var array = [];
+            for (var key in heatmapValues) {
+                var count = heatmapValues[key];
+                if (typeof count == "number") {
+                    var index = bepoLayout.indexOf(key);
+                    if (index != -1) {
+                        array[index-1] = count;
+                    }
+                }
             }
-    );
+
+            //UI configuration
+            var itemSize = 40,
+                    margin = {top: 20, right: 20, bottom: 20, left: 20},
+                    width = itemSize * 20.5 + margin.left + margin.right,
+                    height = itemSize * 7.5 + margin.top + margin.bottom,
+                    gap = 4,
+                    square = {width: itemSize - gap, height: itemSize - gap},
+                    oneAndHalfHorizontalRectangle = {width: itemSize * 1.5 - gap, height: itemSize - gap},
+                    twiceHorizontalRectangle = {width: itemSize * 2 - gap, height: itemSize - gap},
+                    oneAndHalfVerticalRectangle = {width: itemSize - gap, height: itemSize * 1.5 - gap},
+                    twiceVerticalRectangle = {width: itemSize - gap, height: itemSize * 2 - gap};
+
+            function getKind(i) {
+                var result;
+                switch (i) {
+                    case 1:
+                        result = square;
+                        break;
+                    case 2:
+                        result = oneAndHalfHorizontalRectangle;
+                        break;
+                    case 3:
+                        result = twiceHorizontalRectangle;
+                        break;
+                    case 4:
+                        result = oneAndHalfVerticalRectangle;
+                        break;
+                    case 5:
+                        result = twiceVerticalRectangle;
+                        break;
+                }
+                return result;
+            }
+
+            d3.tsv("ergodox.tsv",
+                    function (d) {
+                        return {
+                            x: +d.x,
+                            y: +d.y,
+                            kind: +d.kind,
+                            rx: +d.rx,
+                            ry: +d.ry,
+                            rotate: +d.rotate,
+                            value: 0
+                        };
+                    }, function (error, data) {
+                        var svg = d3.select("[role='heatmap']");
+                        var heatmap = svg
+                                .attr('width', width)
+                                .attr('height', height)
+                                .append('g')
+                                .attr('width', width - margin.left - margin.right)
+                                .attr('height', height - margin.top - margin.bottom)
+                                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+                        var container = heatmap.selectAll('g')
+                                .data(data)
+                                .enter().append('g');
+
+                        var rect = container.append('rect')
+                                .attr('width', function (d) {
+                                    return getKind(d.kind).width;
+                                })
+                                .attr('height', function (d) {
+                                    return getKind(d.kind).height;
+                                })
+                                .attr('x', function (d) {
+                                    return d.x * itemSize;
+                                })
+                                .attr('y', function (d) {
+                                    return d.y * itemSize;
+                                })
+                                .attr('class', 'bordered')
+                                .attr('fill', "#FFFFFF")
+                                .attr('transform', function (d) {
+                                    if (d.rotate != "0")
+                                        return "rotate(" + d.rotate + ", " + d.rx * itemSize + ", " + d.ry * itemSize + ")";
+                                    else
+                                        return null;
+                                });
+
+                        container.append('text')
+                                .attr('x', function (d) {
+                                    width = getKind(d.kind).width;
+                                    return d.x * itemSize + width / 2;
+                                })
+                                .attr('y', function (d) {
+                                    height = getKind(d.kind).height;
+                                    return d.y * itemSize + height / 2;
+                                })
+                                .attr('dominant-baseline', 'middle')
+                                .attr('text-anchor', 'middle')
+//                                .text(function (d, i) {
+//                                    if (i > array.length || array[i] == undefined)
+//                                        return bepoLayout[i];
+//                                    else
+//                                        return array[i];
+//                                })
+                                .text(function (d, i) {
+                                    if (bepoLayout.length > i)
+                                        return bepoLayout[i];
+                                    else
+                                        return i;
+                                })
+                                .attr('transform', function (d) {
+                                    if (d.rotate != "0")
+                                        return "rotate(" + d.rotate + ", " + d.rx * itemSize + ", " + d.ry * itemSize + ")";
+                                    else
+                                        return null;
+                                });
+                        renderColor();
+
+                        function renderColor() {
+                            rect.transition()
+                                    .delay(function (d) {
+                                        return 5;
+                                    }).duration(500)
+                                    .attr('fill', function (d, i) {
+                                        var colorScale = d3.scale.quantile()
+                                                .domain([0, colors.length - 1, d3.max(array)])
+                                                .range(colors);
+                                        var color = colorScale(0);
+                                        if (array[i] != undefined) {
+                                            color = colorScale(array[i]);
+                                            console.log(color);
+                                        }
+                                        return color;
+                                    });
+                        }
+                    }
+            );
+
+
+        }
+    });
 </script>
 </body>
 </html>
