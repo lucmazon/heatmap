@@ -34,7 +34,32 @@
         });
 
         function fillHeatmap(heatmapValues) {
-            var colors = ["#ffffff", "#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58", "#020b27"];
+            var displayMapping = {
+                '<esc>' : 'Esc',
+                '<tab>' : '⇥',
+                '<enter>' : '↩',
+                '<pgup>' : '⇞',
+                '<pgdown>' : '⇟',
+                '<del>' : '⌦',
+                '<backspace>' : '⌫',
+                '<space>' : '␣',
+                '<capslock>' : '⇪',
+                '<left>' : '←',
+                '<up>' : '↑',
+                '<right>' : '→',
+                '<down>' : '↓',
+                'left shift' : '⇧',
+                'right shift' : '⇧',
+                'left alt' : 'alt',
+                'right alt' : 'altGr',
+                'left ctrl' : 'ctrl',
+                'right ctrl' : 'ctrl',
+                'left super' : '❖',
+                '<fn1>' : '~L1',
+                '<fn3>' : '+L3'
+
+        };
+            var colors = ['#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081'];
             var bepoLayout = [
                 // left hand
                 '<esc>', '"', '«', '»', '(', ')', '$', 'w', 'b', 'é', 'p', 'o', 'è', '<tab>',
@@ -59,10 +84,12 @@
             var array = [];
             for (var key in heatmapValues) {
                 var count = heatmapValues[key];
+                console.log(key + ": " + count);
                 if (typeof count == "number") {
                     var index = bepoLayout.indexOf(key);
+                    console.log(index);
                     if (index != -1) {
-                        array[index-1] = count;
+                        array[index] = count;
                     }
                 }
             }
@@ -166,11 +193,16 @@
 //                                        return array[i];
 //                                })
                                 .text(function (d, i) {
-                                    if (bepoLayout.length > i)
+                                    if (bepoLayout.length > i) {
+                                        var displayChar = displayMapping[bepoLayout[i]];
+                                        if (displayChar != undefined) {
+                                            return displayChar;
+                                        }
                                         return bepoLayout[i];
-                                    else
+                                    } else
                                         return i;
                                 })
+                                .attr('fill', 'red')
                                 .attr('transform', function (d) {
                                     if (d.rotate != "0")
                                         return "rotate(" + d.rotate + ", " + d.rx * itemSize + ", " + d.ry * itemSize + ")";
@@ -185,8 +217,8 @@
                                         return 5;
                                     }).duration(500)
                                     .attr('fill', function (d, i) {
-                                        var colorScale = d3.scale.quantile()
-                                                .domain([0, colors.length - 1, d3.max(array)])
+                                        var colorScale = d3.scale.quantize()
+                                                .domain([0, d3.max(array)])
                                                 .range(colors);
                                         var color = colorScale(0);
                                         if (array[i] != undefined) {
