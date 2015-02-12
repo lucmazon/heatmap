@@ -82,6 +82,15 @@ $(function () {
 
         ];
 
+        function merge(container, toMerge) {
+            _.each(toMerge, function (value, key) {
+                if (container[key] != undefined)
+                    container[key] = container[key] + value;
+                else
+                    container[key] = value;
+            });
+        }
+
         function getObject(heatmap, modifiers) {
             // condition finale
             if (modifiers.length == 0) {
@@ -91,46 +100,42 @@ $(function () {
                         filtered[key] = heatmap[key];
                     }
                 }
+//                console.log(filtered);
                 return filtered;
             } else {
+                var result = {};
                 _.each(modifiers, function (modifier) {
                     var modifierList = heatmap[modifier];
                     if (modifierList != undefined) {
-                        var remainingModifiers = _.filter(modifiers, function (m) {return m != modifier;});
-                        return getObject(modifierList, remainingModifiers);
+                        var remainingModifiers = _.filter(modifiers, function (m) {
+                            return m != modifier;
+                        });
+                        merge(result, getObject(modifierList, remainingModifiers));
                     }
                 });
-                return {};
+                return result;
             }
         }
 
-        console.log(getObject(heatmapValues, ["left alt", "right ctrl"]));
+        function getArray(heatmap, modifiers) {
+            var calculatedHeatmap = getObject(heatmap, modifiers);
 
-        function getArrayy(heatmapValues, recursive) {
             var array = [];
-            for (var key in heatmapValues) {
-                var count = heatmapValues[key];
+            for (var key in calculatedHeatmap) {
+                var count = calculatedHeatmap[key];
                 console.log(key + ": " + count);
-                if (typeof count == "number") {
-                    var index = bepoLayout.indexOf(key);
-                    console.log(index);
+                var index = bepoLayout.indexOf(key);
+                console.log(index);
+                if (index != -1) {
+                    array[index] = count;
+                    index = bepoLayout.indexOf(key, index + 1);
                     if (index != -1) {
                         array[index] = count;
-                        index = bepoLayout.indexOf(key, index + 1);
-                        if (index != -1) {
-                            array[index] = count;
-                        }
                     }
-                } else if (recursive) {
-                    getArrayy(count, recursive);
                 }
             }
             return array;
         }
-
-        function getArray(modifiersList) {
-        }
-
 
         //UI configuration
         var itemSize = 40,
@@ -247,10 +252,10 @@ $(function () {
                                 else
                                     return null;
                             });
-                    renderColor([]);
+                    renderColor(heatmapValues, []);
 
-                    function renderColor(modifiersList) {
-                        var array = getArray(modifiersList);
+                    function renderColor(heatmap, modifiersList) {
+                        var array = getArray(heatmap, modifiersList);
                         rect.transition()
                                 .delay(function (d) {
                                     return 5;
