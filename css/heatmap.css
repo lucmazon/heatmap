@@ -1,0 +1,8 @@
+rect.bordered {
+    stroke: #000000;
+    stroke-width: 2px;
+}
+
+label {
+    display: block;
+}
