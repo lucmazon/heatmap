@@ -1,5 +1,30 @@
 $(function () {
-  var heatmapValues;
+  var conf = {};
+
+  var colors = ['#f7fcf0', '#e0f3db', '#ccebc5', '#a8ddb5', '#7bccc4', '#4eb3d3', '#2b8cbe', '#0868ac', '#084081'];
+
+  // maps the keyboard layout positions with the data from the heatmap file
+  var layoutMapping = [
+    // left hand
+    '<esc>', '"', '«', '»', '(', ')', '$', 'w', 'b', 'é', 'p', 'o', 'è', '<tab>',
+    'ç', 'a', 'u', 'i', 'e', ',', 'left super', 'à', 'y', 'x', '.', 'k', '<enter>',
+    '<pgup>', '<pgdown>', '<del>', '<backspace>', 'left ctrl',
+
+    // left thumb block
+    '<del>', '<fn3>', '<space>', 'left shift', '<fn1>', 'left alt',
+
+    // right hand
+    '%', '@', '+', '-', '/', '*', '=',
+    ' ', '^', 'v', 'd', 'l', 'j', 'z',
+    'c', 't', 's', 'r', 'n', 'm',
+    ' ', '\'', 'q', 'g', 'h', 'f', '<capslock>',
+    'right ctrl', '<left>', '<up>', '<down>', '<right>',
+
+    //right thumb block
+    ' ', ' ', ' ', 'right shift', '<backspace>', 'right alt'
+  ];
+
+  // convert the
   var displayMapping = {
     '<esc>': 'Esc',
     '<tab>': '⇥',
@@ -25,29 +50,45 @@ $(function () {
     '<fn3>': '+L3'
   };
 
-  var colors = ['#f7fcf0', '#e0f3db', '#ccebc5', '#a8ddb5', '#7bccc4', '#4eb3d3', '#2b8cbe', '#0868ac', '#084081'];
-  var bepoLayout = [
-    // left hand
-    '<esc>', '"', '«', '»', '(', ')', '$', 'w', 'b', 'é', 'p', 'o', 'è', '<tab>',
-    'ç', 'a', 'u', 'i', 'e', ',', 'left super', 'à', 'y', 'x', '.', 'k', '<enter>',
-    '<pgup>', '<pgdown>', '<del>', '<backspace>', 'left ctrl',
-
-    // left thumb block
-    '<del>', '<fn3>', '<space>', 'left shift', '<fn1>', 'left alt',
-
-    // right hand
-    '%', '@', '+', '-', '/', '*', '=',
-    ' ', '^', 'v', 'd', 'l', 'j', 'z',
-    'c', 't', 's', 'r', 'n', 'm',
-    ' ', '\'', 'q', 'g', 'h', 'f', '<capslock>',
-    'right ctrl', '<left>', '<up>', '<down>', '<right>',
-
-    //right thumb block
-    ' ', ' ', ' ', 'right shift', '<backspace>', 'right alt'
-
-  ];
+  var modifierCheckboxes = $('.modifier');
 
 // function definitions
+
+  function getModifiers() {
+    var modifiers = [];
+    modifierCheckboxes.each(function () {
+      if ($(this).prop('checked'))
+        modifiers.push($(this).val());
+    });
+    return modifiers;
+  }
+
+  function handleJsonHeatmapSelect(event) {
+    handleFileSelect(event, conf["values"]);
+  }
+
+  function handleFileSelect(event, variable) {
+    var file = event.target.files[0];
+
+    if (!file.type.match('application/json')) {
+      return;
+    }
+
+    var reader = new FileReader();
+
+    reader.onload = (function (theFile) {
+      return function (e) {
+        variable = JSON.parse(e.target.result);
+        renderColor(variable, []);
+      }
+    })(file);
+
+    reader.readAsText(file);
+  }
+
+  $('').on('change');
+  document.getElementById('json-heatmap')
+    .addEventListener('change', handleJsonHeatmapSelect, false);
 
   function merge(container, toMerge) {
     _.each(toMerge, function (value, key) {
@@ -89,10 +130,10 @@ $(function () {
     var array = [];
     for (var key in calculatedHeatmap) {
       var count = calculatedHeatmap[key];
-      var index = bepoLayout.indexOf(key);
+      var index = layoutMapping.indexOf(key);
       if (index != -1) {
         array[index] = count;
-        index = bepoLayout.indexOf(key, index + 1);
+        index = layoutMapping.indexOf(key, index + 1);
         if (index != -1) {
           array[index] = count;
         }
@@ -211,12 +252,12 @@ $(function () {
         .attr('dominant-baseline', 'middle')
         .attr('text-anchor', 'middle')
         .text(function (d, i) {
-          if (bepoLayout.length > i) {
-            var displayChar = displayMapping[bepoLayout[i]];
+          if (layoutMapping.length > i) {
+            var displayChar = displayMapping[layoutMapping[i]];
             if (displayChar != undefined) {
               return displayChar;
             }
-            return bepoLayout[i];
+            return layoutMapping[i];
           } else
             return i;
         })
@@ -239,19 +280,12 @@ $(function () {
     .attr('height', height - margin.top - margin.bottom)
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-  var modifierCheckboxes = $('.modifier');
-
   modifierCheckboxes.on('click', function () {
-    var modifiers = [];
-    modifierCheckboxes.each(function () {
-      if ($(this).prop('checked'))
-        modifiers.push($(this).val());
-    });
-    renderColor(heatmapValues, modifiers);
+    renderColor(conf["values"], getModifiers());
   });
 
   $.getJSON('heatmap.json', function (data) {
-    heatmapValues = data;
-    renderColor(heatmapValues, []);
+    conf["values"] = data;
+    renderColor(conf["values"], []);
   });
 })
