@@ -42,8 +42,6 @@ $(function () {
     '<fn3>': '+L3'
   };
 
-  var modifierCheckboxes = $('.modifier');
-
   var svg = d3.select("[role='heatmap']");
   var heatmap = svg
     .attr('width', width)
@@ -76,7 +74,7 @@ $(function () {
 
   function getModifiers() {
     var modifiers = [];
-    modifierCheckboxes.each(function () {
+    $('#modifiers input').each(function () {
       if ($(this).prop('checked'))
         modifiers.push($(this).val());
     });
@@ -154,10 +152,10 @@ $(function () {
 
     for (var key in calculatedHeatmap) {
       var count = calculatedHeatmap[key];
-      var index = keycodeMapping[stringsToKeycodes[key]].indexOf(key);
+      var index = keycodeMapping.indexOf(+stringsToKeycodes[key]);
       if (index != -1) {
         array[index] = count;
-        index = keycodesToStrings[keycodeMapping].indexOf(key, index + 1);
+        index = keycodeMapping.indexOf(+stringsToKeycodes[key], index + 1);
         if (index != -1) {
           array[index] = count;
         }
@@ -331,6 +329,20 @@ $(function () {
     }
   }
 
+  function updateModifiers() {
+    var modifiersDiv = $('#modifiers');
+    _.each(conf['modifiers'], function (modifier) {
+      var label = $('<label/>').html(modifier);
+      var input = $('<input type="checkbox"/>');
+      input.prop('value', modifier).click(function () {
+        console.log(getModifiers());
+        updateWithModifiers(conf['heatmapValues'], getModifiers());
+      });
+      label.append(input);
+      modifiersDiv.append(label);
+    });
+  }
+
   // listeners
 
   $('#json-heatmap').change(function (event) {
@@ -345,7 +357,7 @@ $(function () {
     handleFileSelect(event, 'json', 'keycode-mapping', updateKeycodes);
   });
 
-  modifierCheckboxes.click(function () {
+  $('#modifiers input').click(function () {
     updateWithModifiers(conf["heatmapValues"], getModifiers());
   });
 
@@ -385,7 +397,9 @@ $(function () {
     });
 
   $.getJSON('heatmap.json', function (data) {
-    conf["heatmapValues"] = data;
+    conf["heatmapValues"] = data['count'];
+    conf['modifiers'] = data['modifiers'];
+    updateModifiers();
     update(conf["heatmapValues"]);
   });
 })
