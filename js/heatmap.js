@@ -6,12 +6,7 @@ $(function () {
         width = paddedWidth + margin.left + margin.right,
         paddedHeight = itemSize * 7.5,
         height = paddedHeight + margin.top + margin.bottom,
-        gap = 4,
-        square = {width: itemSize - gap, height: itemSize - gap},
-        oneAndHalfHorizontalRectangle = {width: itemSize * 1.5 - gap, height: itemSize - gap},
-        twiceHorizontalRectangle = {width: itemSize * 2 - gap, height: itemSize - gap},
-        oneAndHalfVerticalRectangle = {width: itemSize - gap, height: itemSize * 1.5 - gap},
-        twiceVerticalRectangle = {width: itemSize - gap, height: itemSize * 2 - gap};
+        gap = 4;
 
     var conf = {};
 
@@ -142,26 +137,13 @@ $(function () {
         return array;
     }
 
-    function getKind(i) {
+    function getKind(kind) {
         var result;
-        switch (i) {
-            case '1':
-                result = square;
-                break;
-            case '2':
-                result = oneAndHalfHorizontalRectangle;
-                break;
-            case '3':
-                result = twiceHorizontalRectangle;
-                break;
-            case '4':
-                result = oneAndHalfVerticalRectangle;
-                break;
-            case '5':
-                result = twiceVerticalRectangle;
-                break;
-        }
-        return result;
+        var split = kind.split('x');
+        var x = split[0];
+        var y = split[1];
+
+        return {width: itemSize * x - gap, height: itemSize * y - gap};
     }
 
     function updateScale(array) {
