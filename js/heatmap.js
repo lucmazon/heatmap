@@ -81,7 +81,7 @@ $(function () {
     return modifiers;
   }
 
-  function handleFileSelect(event, fileType, confTarget, callback) {
+  function handleFileSelect(event, fileType, callback) {
     var file = event.target.files[0];
 
     if (fileType == 'json') {
@@ -98,10 +98,9 @@ $(function () {
     reader.onload = (function (theFile) {
       return function (e) {
         if (fileType == 'json')
-          conf[confTarget] = JSON.parse(e.target.result);
+          callback(JSON.parse(e.target.result));
         else
-          conf[confTarget] = d3.tsv.parse(e.target.result);
-        callback(conf[confTarget])
+          callback(d3.tsv.parse(e.target.result));
       }
     })(file);
 
@@ -144,7 +143,7 @@ $(function () {
 
   function getArrayOfCounts(heatmap, modifiers) {
     var calculatedHeatmap = getObject(heatmap, modifiers);
-    var keycodeMapping = conf['keycodeMapping'];
+    var hardwareKeycodeMapping = conf['hardwareKeycodeMapping'];
     var keycodesToStrings = conf['keycodesToStrings'];
     var stringsToKeycodes = conf['stringsToKeycodes'];
 
@@ -152,10 +151,10 @@ $(function () {
 
     for (var key in calculatedHeatmap) {
       var count = calculatedHeatmap[key];
-      var index = keycodeMapping.indexOf(+stringsToKeycodes[key]);
+      var index = hardwareKeycodeMapping.indexOf(+stringsToKeycodes[key]);
       if (index != -1) {
         array[index] = count;
-        index = keycodeMapping.indexOf(+stringsToKeycodes[key], index + 1);
+        index = hardwareKeycodeMapping.indexOf(+stringsToKeycodes[key], index + 1);
         if (index != -1) {
           array[index] = count;
         }
@@ -184,16 +183,6 @@ $(function () {
         break;
     }
     return result;
-  }
-
-  function update(heatmap) {
-    updateWithModifiers(heatmap, []);
-  }
-
-  function updateWithModifiers(heatmap, modifiers) {
-    var array = getArrayOfCounts(heatmap, modifiers);
-    updateScale(array);
-    renderColor(array);
   }
 
   function updateScale(array) {
@@ -225,20 +214,62 @@ $(function () {
       .call(axis)
   }
 
-  function updateKeyboard(modifiers) {
-    var keycodeMapping = conf['keycodeMapping'];
+  function updateHeatmap(data) {
+    conf['heatmapValues'] = data['count'];
+    conf['modifiers'] = data['modifiers'];
+    updateModifiers();
+    updateWithModifiers(conf['modifiers'], []);
+  }
+
+  function updateWithModifiers(heatmap, modifiers) {
+    var array = getArrayOfCounts(heatmap, modifiers);
+    updateScale(array);
+    renderColor(array);
+  }
+
+  function updateKeycodesToStrings(data) {
+    conf['keycodesToStrings'] = data;
+    var revert = {};
+    _.each(data, function (value, key) {
+      if (typeof value == "string")
+        revert[value] = key;
+      else {
+        revert[value[0]] = key;
+      }
+    });
+    conf['stringsToKeycodes'] = revert;
+  }
+
+  function updateHardwareKeycodeMapping(data) {
+    conf['hardwareKeycodeMapping'] = data['hardwareKeycodeMapping'];
+    conf['displayMapping'] = data['displayMapping'];
+    if (conf['keyboardDesign'] != undefined)
+      refreshKeyboardDesign();
+  }
+
+  function refreshKeyboardDesign() {
+    var rect = heatmap.selectAll('rect')
+//      .transition
+  }
+
+  function setKeyboardDesign(data) {
+    conf['keyboardDesign'] = data;
+
+    var hardwareKeycodeMapping = conf['hardwareKeycodeMapping'];
     var displayMapping = conf['displayMapping'];
+
+    var modifiers = getModifiers();
 
     modifierIndex = 0;
     if (_.contains(modifiers, "left shift") || _.contains(modifiers, "right shift")) {
       modifierIndex++;
     }
-    if (_.contains(modifiers, "right alt")) {
+    if (_.contains(modifiers, "altGr")) {
       modifierIndex += 2;
     }
 
     var container = heatmap.selectAll('g')
-      .data(conf['keyboard'])
+      .data(conf['keyboardDesign'])
       .enter().append('g');
 
     var rect = container.append('rect')
@@ -275,8 +306,8 @@ $(function () {
       .attr('dominant-baseline', 'middle')
       .attr('text-anchor', 'middle')
       .text(function (d, i) {
-        if (keycodeMapping.length > i) {
-          var keycode = keycodeMapping[i];
+        if (hardwareKeycodeMapping != undefined && hardwareKeycodeMapping.length > i) {
+          var keycode = hardwareKeycodeMapping[i];
           var displayChar = displayMapping[keycode];
           if (displayChar != undefined) {
             return displayChar;
@@ -291,7 +322,7 @@ $(function () {
                 return stringCode[0];
               }
             }
-            return keycodeMapping[i];
+            return hardwareKeycodeMapping[i];
           }
         } else
           return i;
@@ -335,7 +366,6 @@ $(function () {
       var label = $('<label/>').html(modifier);
       var input = $('<input type="checkbox"/>');
       input.prop('value', modifier).click(function () {
-        console.log(getModifiers());
         updateWithModifiers(conf['heatmapValues'], getModifiers());
       });
       label.append(input);
@@ -344,62 +374,57 @@ $(function () {
   }
 
   // listeners
+  $('#json-keycode-string-mapping').change(function (event) {
+    handleFileSelect(event, 'json', updateKeycodesToStrings);
+  });
 
   $('#json-heatmap').change(function (event) {
-    handleFileSelect(event, 'json', 'heatmapValues', update);
+    handleFileSelect(event, 'json', updateHeatmap);
   });
 
-  $('#tsv-keyboard').change(function (event) {
-    handleFileSelect(event, 'tsv', 'keyboard', updateKeyboard);
+  $('#tsv-keyboard-design').change(function (event) {
+    handleFileSelect(event, 'tsv', setKeyboardDesign);
   });
 
-  $('#json-keycode-mapping').change(function (event) {
-    handleFileSelect(event, 'json', 'keycode-mapping', updateKeycodes);
+  $('#json-hardware-keycode-mapping').change(function (event) {
+    handleFileSelect(event, 'json', updateHardwareKeycodeMapping);
   });
 
-  $('#modifiers input').click(function () {
+  $('#modifiers').select('input').click(function () {
     updateWithModifiers(conf["heatmapValues"], getModifiers());
   });
 
   // ajax
-  $.getJSON('keycodes.json', function (data) {
-    conf['keycodesToStrings'] = data;
-    var revert = {};
-    _.each(data, function (value, key) {
-      if (typeof value == "string")
-        revert[value] = key;
-      else {
-        revert[value[0]] = key;
-      }
-    });
-    conf['stringsToKeycodes'] = revert;
-  });
-
-  $.getJSON('bepoMapping.json', function (data) {
-    conf['keycodeMapping'] = data['keycodeMapping'];
-    conf['displayMapping'] = data['displayMapping'];
-  });
-
-  d3.tsv("ergodox.tsv",
-    function (d) {
-      return {
-        x: d.x,
-        y: d.y,
-        kind: d.kind,
-        rx: d.rx,
-        ry: d.ry,
-        rotate: d.rotate,
-        value: 0
-      };
-    }, function (error, data) {
-      conf['keyboard'] = data;
-      updateKeyboard();
-    });
-
-  $.getJSON('heatmap.json', function (data) {
-    conf["heatmapValues"] = data['count'];
-    conf['modifiers'] = data['modifiers'];
-    updateModifiers();
-    update(conf["heatmapValues"]);
-  });
-})
+//  $.getJSON('keycodes.json', function (data) {
+//  updateKeycodesToStrings(data);
+//  });
+//
+//  $.getJSON('ergodoxKeycodeMapping.json', function (data) {
+//    console.log(data);
+//    conf['hardwareKeycodeMapping'] = data['hardwareKeycodeMapping'];
+//    conf['displayMapping'] = data['displayMapping'];
+//  });
+//
+//  d3.tsv("ergodox.tsv",
+//    function (d) {
+//      return {
+//        x: d.x,
+//        y: d.y,
+//        kind: d.kind,
+//        rx: d.rx,
+//        ry: d.ry,
+//        rotate: d.rotate,
+//        value: 0
+//      };
+//    }, function (error, data) {
+//      conf['keyboardDesign'] = data;
+//      updateKeyboardDesign();
+//    });
+//
+//  $.getJSON('heatmap.json', function (data) {
+//    conf["heatmapValues"] = data['count'];
+//    conf['modifiers'] = data['modifiers'];
+//    updateModifiers();
+//    update(conf["heatmapValues"]);
+//  });
+});

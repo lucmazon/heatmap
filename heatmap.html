@@ -13,40 +13,20 @@
 </head>
 <body>
 <div>
-    <label>Keyboard Mapping file
-        <input type="file" id="tsv-keyboard"/>
+    <label>JSON: Keycodes to Strings mapping
+        <input type="file" id="json-keycode-string-mapping"/>
     </label>
-    <label>Keyboard keycodes mapping file
-    <input type="file" id="json-keycode-mapping">
+    <label>JSON: Hardware/keycodes mapping file
+        <input type="file" id="json-hardware-keycode-mapping"/>
+    </label>
+    <label>TSV: Keyboard design file
+        <input type="file" id="tsv-keyboard-design"/>
     </label>
     <label>Heatmap file
         <input type="file" id="json-heatmap"/>
     </label>
 
-    <div id="modifiers">
-
-    </div>
-    <!--<label>Left shift-->
-        <!--<input type="checkbox" id="left-shift" class="modifier" value="left shift">-->
-    <!--</label>-->
-    <!--<label>Right shift-->
-        <!--<input type="checkbox" id="right-shift" class="modifier" value="right shift">-->
-    <!--</label>-->
-    <!--<label>Left ctrl-->
-        <!--<input type="checkbox" id="left-ctrl" class="modifier" value="left ctrl">-->
-    <!--</label>-->
-    <!--<label>Right ctrl-->
-        <!--<input type="checkbox" id="right-ctrl" class="modifier" value="right ctrl">-->
-    <!--</label>-->
-    <!--<label>Left alt-->
-        <!--<input type="checkbox" id="left-alt" class="modifier" value="left alt">-->
-    <!--</label>-->
-    <!--<label>AltGr-->
-        <!--<input type="checkbox" id="right-alt" class="modifier" value="right alt">-->
-    <!--</label>-->
-    <!--<label>Left super-->
-        <!--<input type="checkbox" id="left-super" class="modifier" value="left super">-->
-    <!--</label>-->
+    <div id="modifiers"></div>
 </div>
 <div id="loaded-json-heatmap"></div>
 <div>

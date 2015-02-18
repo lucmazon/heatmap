@@ -1,5 +1,5 @@
 {
-    "keycodeMapping" : [
+    "hardwareKeycodeMapping" : [
 	  9,  10,  11,  12,  13,  14,  49,
 	 35,  24,  25,  26,  27,  28,  23,
 	 51,  38,  39,  40,  41,  42,
