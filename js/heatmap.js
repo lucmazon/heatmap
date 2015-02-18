@@ -242,6 +242,7 @@ $(function () {
     }
 
     function setKeyboardDesign(data) {
+      console.log("keyboard");
         conf['keyboardDesign'] = data;
 
         var hardwareKeycodeMapping = conf['hardwareKeycodeMapping'];
