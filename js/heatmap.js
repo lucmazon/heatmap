@@ -260,7 +260,8 @@ $(function () {
 
     var modifiers = getModifiers();
 
-    var container = heatmap.selectAll('g')
+    heatmap.selectAll('g').remove();
+      var container = heatmap.selectAll('g')
       .data(conf.keyboardDesign)
       .enter().append('g');
 
@@ -364,10 +365,34 @@ $(function () {
     updateWithModifiers(conf["heatmapValues"], getModifiers());
   });
 
+  function loadKeyboardDesignFromSelect() {
+    var selected = $('#json-keyboard-design-select').find('option:selected').val();
+
+    d3.tsv(selected,
+      function (d) {
+        return d;
+      }, function (error, data) {
+        conf.keyboardDesign = data;
+        updateKeyboardDesign(data);
+      })
+  }
+
+  // initial load
+  $.getJSON('keycodes.json', function (data) {
+    updateKeycodesToStrings(data);
+
+    var keyboardSelect = $('#json-keyboard-design-select');
+
+    keyboardSelect.change(function () {
+      loadKeyboardDesignFromSelect();
+    });
+
+    keyboardSelect.change();
+  });
+
+
+
   // ajax
-//  $.getJSON('keycodes.json', function (data) {
-//  updateKeycodesToStrings(data);
-//  });
 //
 //  $.getJSON('ergodoxKeycodeMapping.json', function (data) {
 //    console.log(data);
@@ -375,21 +400,6 @@ $(function () {
 //    conf.displayMapping = data.displayMapping;
 //  });
 //
-//  d3.tsv("ergodox.tsv",
-//    function (d) {
-//      return {
-//        x: d.x,
-//        y: d.y,
-//        kind: d.kind,
-//        rx: d.rx,
-//        ry: d.ry,
-//        rotate: d.rotate,
-//        value: 0
-//      };
-//    }, function (error, data) {
-//      conf.keyboardDesign = data;
-//      updateKeyboardDesign();
-//    });
 //
 //  $.getJSON('heatmap.json', function (data) {
 //    conf["heatmapValues"] = data.count;
