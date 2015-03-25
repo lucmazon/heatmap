@@ -51,7 +51,7 @@ $(function () {
         return modifiers;
     }
 
-    function handleFileSelect(event, fileType, callback) {
+    function handleFileSelect(event, fileType, fileInput, label, callback) {
         var file = event.target.files[0];
 
         if (fileType == 'json') {
@@ -61,8 +61,13 @@ $(function () {
         }
 
         if (!file.type.match(fileCheck)) {
+            updateLabel($(this), "Incorrect file, expected a " + fileType + " file.");
             return;
+        } else {
+            console.log(label);
+            updateLabel(fileInput, label);
         }
+
 
         var reader = new FileReader();
         reader.onload = (function (theFile) {
@@ -242,7 +247,6 @@ $(function () {
     }
 
     function setKeyboardDesign(data) {
-      console.log("keyboard");
         conf['keyboardDesign'] = data;
 
         var hardwareKeycodeMapping = conf['hardwareKeycodeMapping'];
@@ -341,21 +345,25 @@ $(function () {
         });
     }
 
+    function updateLabel(fileInput, label) {
+        fileInput.parent().parent().parent().find('input.file-label').val(label);
+    }
+
     // listeners
-    $('#json-keycode-string-mapping').change(function (event) {
-        handleFileSelect(event, 'json', updateKeycodesToStrings);
+    $('#json-keycode-string-mapping').on('fileselect', function (event, numFiles, label) {
+        handleFileSelect(event, 'json', $(this), label, updateKeycodesToStrings);
     });
 
-    $('#json-heatmap').change(function (event) {
-        handleFileSelect(event, 'json', updateHeatmap);
+    $('#json-heatmap').on('fileselect', function (event, numFiles, label) {
+        handleFileSelect(event, 'json', $(this), label, updateHeatmap);
     });
 
-    $('#tsv-keyboard-design').change(function (event) {
-        handleFileSelect(event, 'tsv', setKeyboardDesign);
+    $('#tsv-keyboard-design').on('fileselect', function (event, numFiles, label) {
+        handleFileSelect(event, 'tsv', $(this), label, setKeyboardDesign);
     });
 
-    $('#json-hardware-keycode-mapping').change(function (event) {
-        handleFileSelect(event, 'json', updateHardwareKeycodeMapping);
+    $('#json-hardware-keycode-mapping').on('fileselect', function (event, numFiles, label) {
+        handleFileSelect(event, 'json', $(this), label, updateHardwareKeycodeMapping);
     });
 
     $('#modifiers').select('input').click(function () {

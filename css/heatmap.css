@@ -1,3 +1,40 @@
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.panel-heading a:after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e114";
+    float: right;
+    color: #808080;
+}
+
+.panel-heading a.collapsed:after {
+    content: "\e080";
+}
+
+/*styling svg*/
 rect.bordered {
     stroke: #000000;
     stroke-width: 2px;
