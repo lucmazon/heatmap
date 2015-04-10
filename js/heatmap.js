@@ -338,12 +338,13 @@ $(function () {
         var modifiersDiv = $('#modifiers');
         modifiersDiv.children().remove();
         _.each(conf.modifiers, function (modifier) {
-            var label = $('<label/>').html(modifier);
+            var label = $('<label class="checkbox-inline"/>');
             var input = $('<input type="checkbox"/>');
             input.prop('value', modifier).click(function () {
                 updateWithModifiers(conf.heatmapValues, getModifiers());
             });
             label.append(input);
+            label.append(modifier);
             modifiersDiv.append(label);
         });
     }
