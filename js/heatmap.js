@@ -64,7 +64,6 @@ $(function () {
             updateLabel($(this), "Incorrect file, expected a " + fileType + " file.");
             return;
         } else {
-            console.log(label);
             updateLabel(fileInput, label);
         }
 
@@ -398,21 +397,4 @@ $(function () {
 
         keyboardSelect.change();
     });
-
-
-    // ajax
-//
-//  $.getJSON('ergodoxKeycodeMapping.json', function (data) {
-//    console.log(data);
-//    conf.hardwareKeycodeMapping = data.hardwareKeycodeMapping;
-//    conf.displayMapping = data.displayMapping;
-//  });
-//
-//
-//  $.getJSON('heatmap.json', function (data) {
-//    conf["heatmapValues"] = data.count;
-//    conf.modifiers = data.modifiers;
-//    updateModifiers();
-//    update(conf["heatmapValues"]);
-//  });
 });
